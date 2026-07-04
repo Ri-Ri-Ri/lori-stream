@@ -117,9 +117,12 @@ def notify(title, message=""):
 # removed after the paste, so dictations don't pile up in Notification Center.
 # Distinct from the stable Lori's uid — both builds share one notification center
 _STATUS_UID = "lori-stream-status"
+STATUS_NOTIFICATIONS = True  # config "status_notifications", set in main()
 
 
 def notify_status(title, message=""):
+    if not STATUS_NOTIFICATIONS:
+        return
     log(f"notify: {title} | {message}")
     if SELFTEST:
         return
@@ -137,7 +140,7 @@ def notify_status(title, message=""):
 
 
 def clear_status():
-    if SELFTEST:
+    if not STATUS_NOTIFICATIONS or SELFTEST:
         return
     try:
         import UserNotifications as UN
@@ -602,6 +605,8 @@ def main():
         app = None
 
     config = load_config()
+    global STATUS_NOTIFICATIONS
+    STATUS_NOTIFICATIONS = config.get("status_notifications", True)
 
     while True:
         try:

@@ -181,6 +181,7 @@ After installation:
 | `min_volume` | `0.01` | Silence threshold per segment. If quiet speech isn't transcribed — lower this value. |
 | `debounce_seconds` | `0.3` | Protection against double-tap. |
 | `max_recording_seconds` | `600` | Auto-stop for a forgotten recording. |
+| `status_notifications` | `true` | Show the Recording → Transcribing banner (one replaceable notification, removed after the paste). Set to `false` to dictate silently. |
 | `min_segment_seconds` | `8.0` | A segment must be at least this long before a pause can close it. Shorter → more, smaller segments (faster tail, slightly worse context per segment). |
 | `max_segment_seconds` | `30.0` | Hard cut if no pause shows up — keeps continuous speech streaming. Matches Whisper's native 30 s window. |
 | `silence_seconds` | `0.6` | How long a pause must last to close a segment. |
