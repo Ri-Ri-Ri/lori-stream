@@ -122,6 +122,34 @@ def collapse_repeat_loops(text):
     return _REPEAT_LOOP.sub(lambda m: m.group(1) * 3, text)
 
 
+# whisper was trained on videos that end with sign-off phrases — on trailing
+# silence it hallucinates them; stripped only at the very end of a transcript
+_TRAILING_HALLUCINATIONS = (
+    "спасибо за внимание",
+    "спасибо за просмотр",
+    "продолжение следует",
+    "субтитры сделал dimatorzok",
+    "субтитры делал dimatorzok",
+    "thanks for watching",
+    "thank you for watching",
+)
+
+
+def strip_trailing_hallucinations(text):
+    changed = True
+    while changed:
+        changed = False
+        stripped = text.rstrip(" .,!…")
+        low = stripped.lower()
+        for phrase in _TRAILING_HALLUCINATIONS:
+            if low.endswith(phrase):
+                text = stripped[: len(stripped) - len(phrase)].rstrip(" .,!…")
+                log(f"Trailing hallucination stripped: «{phrase}»")
+                changed = True
+                break
+    return text
+
+
 def _split_chunks(text, size):
     if len(text) <= size:
         return [text]
@@ -407,6 +435,7 @@ class LoriStream:
             texts = [self._results.get(i, "") for i in range(self._seq)]
             text = " ".join(t for t in texts if t).strip()
             text = collapse_repeat_loops(text)
+            text = strip_trailing_hallucinations(text)
             log(f"Finish: {self._seq} segment(s), tail wait {time.time()-t0:.1f}s, {len(text)} chars")
             if text:
                 paste_text(text)
