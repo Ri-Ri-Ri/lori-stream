@@ -113,6 +113,41 @@ def notify(title, message=""):
         pass
 
 
+# one fixed identifier: Recording replaces itself with Transcribing and is
+# removed after the paste, so dictations don't pile up in Notification Center.
+# Distinct from the stable Lori's uid — both builds share one notification center
+_STATUS_UID = "lori-stream-status"
+
+
+def notify_status(title, message=""):
+    log(f"notify: {title} | {message}")
+    if SELFTEST:
+        return
+    try:
+        import UserNotifications as UN
+        c = UN.UNUserNotificationCenter.currentNotificationCenter()
+        content = UN.UNMutableNotificationContent.alloc().init()
+        content.setTitle_(title)
+        content.setBody_(message or " ")
+        content.setInterruptionLevel_(2)
+        req = UN.UNNotificationRequest.requestWithIdentifier_content_trigger_(_STATUS_UID, content, None)
+        c.addNotificationRequest_withCompletionHandler_(req, None)
+    except Exception:
+        pass
+
+
+def clear_status():
+    if SELFTEST:
+        return
+    try:
+        import UserNotifications as UN
+        c = UN.UNUserNotificationCenter.currentNotificationCenter()
+        c.removePendingNotificationRequestsWithIdentifiers_([_STATUS_UID])
+        c.removeDeliveredNotificationsWithIdentifiers_([_STATUS_UID])
+    except Exception:
+        pass
+
+
 CHUNK_SIZE = 400  # Cursor/xterm.js hangs on large clipboard pastes
 
 _REPEAT_LOOP = re.compile(r"((?:\S+\s){1,12}?)(?:\1){5,}")
@@ -315,6 +350,7 @@ class LoriStream:
 
         if action == "stop":
             log("→ stop")
+            notify_status("Lori Stream", "Transcribing…")
             if self._auto_stop_timer is not None:
                 self._auto_stop_timer.cancel()
                 self._auto_stop_timer = None
@@ -375,6 +411,7 @@ class LoriStream:
             self._auto_stop_timer.daemon = True
             self._auto_stop_timer.start()
             log("Recording started (streaming)")
+            notify_status("🎙 Lori Stream", "Recording…")
         except Exception as e:
             log(f"Recording error: {e}")
             with self._lock:
@@ -446,6 +483,7 @@ class LoriStream:
         except Exception as e:
             log(f"Finish error: {e}")
         finally:
+            clear_status()
             with self._lock:
                 self.state = STATE_IDLE
             log("Done, waiting for trigger...")

@@ -4,6 +4,8 @@
 
 Press a button — speak — press again. Text is pasted wherever your cursor is.
 
+![Demo](assets/lori-demo.gif)
+
 **The streaming twist:** transcription happens *while you speak*. Audio is cut
 into segments at natural pauses in your speech, and each finished segment is
 transcribed in the background as the recording continues. When you press stop,
