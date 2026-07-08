@@ -172,6 +172,10 @@ _TRAILING_HALLUCINATIONS = (
     "thank you for watching",
 )
 
+# blogger sign-offs carry arbitrary names («С вами был Игорь Негода»,
+# «С вами был Юрий») — matched as a pattern, not exact phrases
+_TRAILING_SIGNOFF = re.compile(r"\bс вами был[аи]?(?:[ ,]+[а-яё]+){1,3}$")
+
 
 def strip_trailing_hallucinations(text):
     changed = True
@@ -185,6 +189,12 @@ def strip_trailing_hallucinations(text):
                 log(f"Trailing hallucination stripped: «{phrase}»")
                 changed = True
                 break
+        if not changed:
+            m = _TRAILING_SIGNOFF.search(low)
+            if m:
+                log(f"Trailing hallucination stripped: «{stripped[m.start():]}»")
+                text = stripped[: m.start()].rstrip(" .,!…")
+                changed = True
     return text
 
 
